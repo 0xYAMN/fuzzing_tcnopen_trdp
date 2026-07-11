@@ -1,3 +1,6 @@
+build-afl-asan
+build-afl-cmplog
 build-afl
 build
 output
+run
