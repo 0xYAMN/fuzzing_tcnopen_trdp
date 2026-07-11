@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Forces AFL_LLVM_CMPLOG=1 for every invocation, regardless of the caller's
+# environment, so `cmake --build` always produces cmplog instrumentation.
+export AFL_LLVM_CMPLOG=1
+exec afl-clang-fast++ "$@"
