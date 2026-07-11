@@ -22,6 +22,8 @@
 				buildInputs = [
 					pkgs.util-linux.dev  # uuid/uuid.h
 					pkgs.util-linux.lib  # libuuid.so
+					pkgs.libxml2.dev     # libxml/*.h, for xsd_check
+					pkgs.libxml2.out     # libxml2.so
 				];
 			};
 		};

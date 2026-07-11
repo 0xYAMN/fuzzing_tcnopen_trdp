@@ -11,6 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(Threads REQUIRED)
+find_package(LibXml2 REQUIRED)
 find_library(UUID_LIBRARY uuid REQUIRED)
 
 set(TRDP_SRC_DIR "${CMAKE_SOURCE_DIR}/trdp/src")
@@ -81,3 +82,7 @@ target_link_libraries(parse_xml PRIVATE tcnopen_trdp)
 
 add_executable(fuzz_xml fuzz.cpp)
 target_link_libraries(fuzz_xml PRIVATE tcnopen_trdp)
+
+# Standalone exectable: validates an XML file against an XSD
+add_executable(xsd_check xsd_check.cpp)
+target_link_libraries(xsd_check PRIVATE LibXml2::LibXml2)
