@@ -78,3 +78,6 @@ target_link_libraries(tcnopen_trdp PUBLIC
 
 add_executable(parse_xml parse_xml.cpp)
 target_link_libraries(parse_xml PRIVATE tcnopen_trdp)
+
+add_executable(fuzz_xml fuzz.cpp)
+target_link_libraries(fuzz_xml PRIVATE tcnopen_trdp)
