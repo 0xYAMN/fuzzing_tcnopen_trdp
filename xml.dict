@@ -1,72 +1,264 @@
 #
-# AFL dictionary for XML
-# ----------------------
+# AFL dictionary for the TRDP device-config XML parser (trdp_xml.c / tau_xml.c)
+# ------------------------------------------------------------------------------
 #
-# Several basic syntax elements and attributes, modeled on libxml2.
+# trdp_xml.c is a small hand-rolled parser, not a general XML engine: it does
+# exact strcmp/vos_strnicmp against a fixed set of element and attribute
+# names, and <!...>/<?...> are skipped wholesale rather than specially
+# understood. A generic libxml2-style dictionary (DOCTYPE, ENTITY, ATTLIST,
+# CDATA, xml:lang, ...) is therefore mostly noise for this target -- it can
+# never match anything this parser branches on.
 #
-# Created by Michal Zalewski <lcamtuf@google.com>
+# All tokens below were extracted directly from the real device configs in
+# inputs/ (device1.xml, nestedDS.xml, test_sdt.xml, example.xml), which are
+# themselves taken from TRDP's own example/test suite. Tag/attribute names
+# are exact strings this code path's trdp_XMLSeekStartTag()/
+# trdp_XMLGetAttribute() calls compare against, so splicing them in directly
+# gets the mutator past comparisons that random mutation would essentially
+# never hit on its own.
+#
+# Two kinds of tokens below go beyond what's literally in the example files:
+#   - the full "type" value set for <element>, and the "mapped-*"/service
+#     tokens completed against the same code path's neighbours (e.g. TCP
+#     next to UDP, mapped-pd-parameter/mapped-source/mapped-destination next
+#     to mapped-telegram) -- same attribute/tag family the examples do
+#     exercise, just the full valid domain instead of the observed subset.
+#   - the entire "service" family (service-list, service, event, field,
+#     method, service-device, instance, telegramRef) has NO seed at all --
+#     see the note at the bottom of this file before expecting it to do
+#     anything.
 #
 
-attr_encoding=" encoding=\"1\""
-attr_generic=" a=\"1\""
-attr_href=" href=\"1\""
-attr_standalone=" standalone=\"no\""
-attr_version=" version=\"1\""
-attr_xml_base=" xml:base=\"1\""
-attr_xml_id=" xml:id=\"1\""
-attr_xml_lang=" xml:lang=\"1\""
-attr_xml_space=" xml:space=\"1\""
-attr_xmlns=" xmlns=\"1\""
+#
+# Element (tag) names -- trdp_XMLSeekStartTag() / trdp_XMLSeekStartTagAny()
+#
+tag_device="device"
+tag_device_configuration="device-configuration"
+tag_mem_block_list="mem-block-list"
+tag_mem_block="mem-block"
+tag_bus_interface_list="bus-interface-list"
+tag_bus_interface="bus-interface"
+tag_trdp_process="trdp-process"
+tag_pd_com_parameter="pd-com-parameter"
+tag_md_com_parameter="md-com-parameter"
+tag_telegram="telegram"
+tag_pd_parameter="pd-parameter"
+tag_source="source"
+tag_destination="destination"
+tag_sdt_parameter="sdt-parameter"
+tag_sdtv4_parameter="sdtv4-parameter"
+tag_sdtv4_srv_inst_parameter="sdtv4-srv-inst-parameter"
+tag_mapped_device_list="mapped-device-list"
+tag_com_parameter_list="com-parameter-list"
+tag_com_parameter="com-parameter"
+tag_data_set_list="data-set-list"
+tag_data_set="data-set"
+tag_element="element"
+tag_debug="debug"
 
-entity_builtin="&lt;"
-entity_decimal="&#1;"
-entity_external="&a;"
-entity_hex="&#x1;"
+# mapped-device-list family -- from example.xml, plus mapped-pd-parameter/
+# mapped-source/mapped-destination/mapped-sdt-parameter which are the
+# mapped-telegram children example.xml's flat <mapped-telegram .../> doesn't
+# itself show, but are part of the same parsing routine.
+tag_mapped_device="mapped-device"
+tag_mapped_bus_interface="mapped-bus-interface"
+tag_mapped_telegram="mapped-telegram"
+tag_mapped_pd_parameter="mapped-pd-parameter"
+tag_mapped_source="mapped-source"
+tag_mapped_destination="mapped-destination"
+tag_mapped_sdt_parameter="mapped-sdt-parameter"
 
-string_any="ANY"
-string_brackets="[]"
-string_cdata="CDATA"
-string_col_fallback=":fallback"
-string_col_generic=":a"
-string_col_include=":include"
-string_dashes="--"
-string_empty="EMPTY"
-string_empty_dblquotes="\"\""
-string_empty_quotes="''"
-string_entities="ENTITIES"
-string_entity="ENTITY"
-string_fixed="#FIXED"
-string_id="ID"
-string_idref="IDREF"
-string_idrefs="IDREFS"
-string_implied="#IMPLIED"
-string_nmtoken="NMTOKEN"
-string_nmtokens="NMTOKENS"
-string_notation="NOTATION"
-string_parentheses="()"
-string_pcdata="#PCDATA"
-string_percent="%a"
-string_public="PUBLIC"
-string_required="#REQUIRED"
-string_schema=":schema"
-string_system="SYSTEM"
-string_ucs4="UCS-4"
-string_utf16="UTF-16"
-string_utf8="UTF-8"
-string_xmlns="xmlns:"
+# service config family -- NOT present in any seed, see note at end of file
+tag_service_list="service-list"
+tag_service="service"
+tag_event="event"
+tag_field="field"
+tag_method="method"
+tag_service_device="service-device"
+tag_instance="instance"
+tag_telegram_ref="telegramRef"
 
-tag_attlist="<!ATTLIST"
-tag_cdata="<![CDATA["
-tag_close="</a>"
-tag_doctype="<!DOCTYPE"
-tag_element="<!ELEMENT"
-tag_entity="<!ENTITY"
-tag_ignore="<![IGNORE["
-tag_include="<![INCLUDE["
-tag_notation="<!NOTATION"
-tag_open="<a>"
-tag_open_close="<a />"
-tag_open_exclamation="<!"
-tag_open_q="<?"
-tag_sq2_close="]]>"
-tag_xml_q="<?xml?>"
+#
+# Attribute names -- trdp_XMLGetAttribute()
+#
+attr_xmlns_xsi="xmlns:xsi"
+attr_xsi_schema_location="xsi:noNamespaceSchemaLocation"
+attr_host_name="host-name"
+attr_leader_name="leader-name"
+attr_type="type"
+attr_memory_size="memory-size"
+attr_size="size"
+attr_preallocate="preallocate"
+attr_network_id="network-id"
+attr_name="name"
+attr_host_ip="host-ip"
+attr_blocking="blocking"
+attr_cycle_time="cycle-time"
+attr_priority="priority"
+attr_traffic_shaping="traffic-shaping"
+attr_marshall="marshall"
+attr_port="port"
+attr_qos="qos"
+attr_ttl="ttl"
+attr_timeout_value="timeout-value"
+attr_validity_behavior="validity-behavior"
+attr_udp_port="udp-port"
+attr_tcp_port="tcp-port"
+attr_confirm_timeout="confirm-timeout"
+attr_connect_timeout="connect-timeout"
+attr_reply_timeout="reply-timeout"
+attr_protocol="protocol"
+attr_retries="retries"
+attr_com_id="com-id"
+attr_data_set_id="data-set-id"
+attr_com_parameter_id="com-parameter-id"
+attr_cycle="cycle"
+attr_timeout="timeout"
+attr_id="id"
+attr_uri1="uri1"
+attr_uri="uri"
+attr_smi1="smi1"
+attr_udv="udv"
+attr_rx_period="rx-period"
+attr_tx_period="tx-period"
+attr_lmi_max="lmi-max"
+attr_udv_main="udv-main"
+attr_udv_sub="udv-sub"
+attr_n_rxsafe="n-rxsafe"
+attr_n_guard="n-guard"
+attr_safe_func_id="safe-func-id"
+attr_safe_func_vers="safe-func-vers"
+attr_safe_channel_id="safe-channel-id"
+attr_safe_channel_vers="safe-channel-vers"
+attr_prot_var="prot-var"
+attr_instance_id="instance-id"
+attr_file_name="file-name"
+attr_file_size="file-size"
+attr_level="level"
+attr_info="info"
+attr_array_size="array-size"
+
+# from example.xml: mapped-bus-interface's leader-ip, mapped-source's uri2
+# (mapped-destination reuses "uri", already listed above), mapped-pd-
+# parameter's offset-address, and the dataset <element> extras unit/scale/
+# offset (marshalling metadata, not gating logic, but still exact-matched)
+attr_leader_ip="leader-ip"
+attr_uri2="uri2"
+attr_offset_address="offset-address"
+attr_unit="unit"
+attr_scale="scale"
+attr_offset="offset"
+
+# service config family -- NOT present in any seed, see note at end of file
+attr_dummy_service="dummyService"
+attr_reply_com_id="reply-com-id"
+attr_confirm="confirm"
+attr_src_uri="src-uri"
+attr_dst_uri="dst-uri"
+attr_red_uri="red-uri"
+attr_src_id="src-id"
+attr_dst_id="dst-id"
+
+#
+# Enum-like attribute values that are exact-matched (vos_strnicmp) rather
+# than parsed as numbers
+#
+val_on="on"
+val_off="off"
+val_yes="yes"
+val_no="no"
+val_keep="keep"
+val_zero="zero"
+val_udp="UDP"
+val_tcp="TCP"
+val_dummy="dummy"
+val_md="MD"
+
+#
+# <element type="..."> datatype names -- string2type()'s token table.
+# Numeric codes 1-16 double as valid "type" values too (see id_type_code_*).
+#
+type_bitset8="BITSET8"
+type_bool8="BOOL8"
+type_antivalent8="ANTIVALENT8"
+type_char8="CHAR8"
+type_utf8="UTF8"
+type_utf16="UTF16"
+type_int8="INT8"
+type_int16="INT16"
+type_int32="INT32"
+type_int64="INT64"
+type_uint8="UINT8"
+type_uint16="UINT16"
+type_uint32="UINT32"
+type_uint64="UINT64"
+type_real32="REAL32"
+type_real64="REAL64"
+type_timedate32="TIMEDATE32"
+type_timedate48="TIMEDATE48"
+type_timedate64="TIMEDATE64"
+
+#
+# Debug level chars (debug file-name="..." level="...")
+#
+val_level_error="E"
+val_level_warning="W"
+
+#
+# Numeric strings worth splicing verbatim: telegram/data-set cross-references
+# (com-id/data-set-id must line up with a <data-set id="...">, and nested
+# data-sets reference another data-set's id via the "type" attribute -- see
+# nestedDS.xml/test_sdt.xml), well-known TRDP UDP ports, and the type-code
+# numbers accepted alongside the named datatype strings above.
+#
+id_1001="1001"
+id_1002="1002"
+id_1003="1003"
+id_1004="1004"
+id_1005="1005"
+port_pd="17224"
+port_md="17225"
+num_memory_size="65535"
+type_code_range="16"
+
+#
+# XML prolog as actually used in the examples
+#
+prolog_utf8="<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+
+#
+# IMPORTANT -- harness reachability
+# ------------------------------------------------------------------------------
+# fuzz.cpp only calls tau_readXmlDeviceConfig(). That function reads just
+# <device-configuration>/<mem-block-list>/<mem-block>, <debug>,
+# <com-parameter-list>/<com-parameter>, and the network-id/name/host-ip/
+# leader-ip attributes of <bus-interface-list>/<bus-interface> -- then
+# returns. Everything else lives in *separate* top-level entry points that
+# the harness never calls, each re-walking the same document from scratch:
+#   - tau_readXmlInterfaceConfig()        -- trdp-process, pd-com-parameter,
+#                                             md-com-parameter, telegram,
+#                                             pd-parameter, source,
+#                                             destination, sdt-parameter,
+#                                             sdtv4-parameter,
+#                                             sdtv4-srv-inst-parameter
+#   - tau_readXmlDatasetConfig()          -- data-set-list, data-set, element
+#   - tau_readXmlMappedDevices()
+#     tau_readXmlMappedDeviceConfig()
+#     tau_readXmlMappedInterfaceConfig()  -- the whole mapped-* family added
+#                                             above
+#   - tau_readXmlServiceConfig()          -- the whole service family added
+#                                             above
+#
+# So most of this dictionary -- everything from tag_trdp_process down,
+# mapped-*, and service -- currently can't influence coverage at all,
+# regardless of how good the seeds or tokens are: that code is simply never
+# executed by any input. This isn't a dictionary problem, it's a harness
+# problem. Fixing it means calling the other tau_readXml*() functions on the
+# same TRDP_XML_DOC_HANDLE_T in fuzz.cpp (pIfName/pHostname can both be
+# passed as "" to mean "take the first one defined").
+#
+# Two attributes seen in example.xml were deliberately left out above:
+# <com-parameter tsn="..." vlan="..."> -- grepping tau_xml.c confirms
+# com-parameter's attribute loop only recognizes id/qos/ttl/retries; tsn and
+# vlan are silently skipped by the parser, so they're dead weight in a
+# dictionary (they don't gate anything to get past).
