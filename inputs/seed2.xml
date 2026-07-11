@@ -1,0 +1,5 @@
+<root>
+  <child type="awesome">
+    <subchild>data</subchild>
+  </child>
+</root>
