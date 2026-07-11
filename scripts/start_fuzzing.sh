@@ -48,19 +48,19 @@ start_instance() {
 }
 
 start_instance main \
-    nix develop --command env AFL_NO_UI=1 AFL_AUTORESUME=1 \
+    env AFL_NO_UI=1 AFL_AUTORESUME=1 \
     afl-fuzz -M main -i inputs/ -o output/ -x xml.dict \
     -c ./build-afl-cmplog/fuzz_xml -- ./build-afl/fuzz_xml @@
 
 sleep 2
 
 start_instance asan \
-    nix develop --command env AFL_NO_UI=1 AFL_AUTORESUME=1 ASAN_OPTIONS=abort_on_error=1:detect_leaks=0:symbolize=0 \
+    env AFL_NO_UI=1 AFL_AUTORESUME=1 ASAN_OPTIONS=abort_on_error=1:detect_leaks=0:symbolize=0 \
     afl-fuzz -S asan -m none -i inputs/ -o output/ -x xml.dict \
     -- ./build-afl-asan/fuzz_xml @@
 
 start_instance sec1 \
-    nix develop --command env AFL_NO_UI=1 AFL_AUTORESUME=1 \
+    env AFL_NO_UI=1 AFL_AUTORESUME=1 \
     afl-fuzz -S sec1 -p exploit -i inputs/ -o output/ -x xml.dict \
     -- ./build-afl/fuzz_xml @@
 
