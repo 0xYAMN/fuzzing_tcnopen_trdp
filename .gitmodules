@@ -1,0 +1,3 @@
+[submodule "trdp"]
+	path = trdp
+	url = git@github.com:HtoTheB/TCNOpen-TRDP-Mirror.git
